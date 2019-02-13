@@ -21,6 +21,8 @@ import com.microsoft.rest.v2.policy.RequestPolicyOptions;
 import io.netty.channel.ChannelException;
 import io.reactivex.Flowable;
 import io.reactivex.Single;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -43,6 +45,7 @@ import java.util.concurrent.TimeoutException;
 public final class RequestRetryFactory implements RequestPolicyFactory {
 
     private final RequestRetryOptions requestRetryOptions;
+    private final Logger logger = LoggerFactory.getLogger(RequestRetryFactory.class);
 
     /**
      * Creates a factory capable of generating RequestRetry policies for the {@link HttpPipeline}.
@@ -78,7 +81,7 @@ public final class RequestRetryFactory implements RequestPolicyFactory {
 
         // This is to log for debugging purposes only. Comment/uncomment as necessary for releasing/debugging.
         private void logf(String s, Object... args) {
-            //System.out.println(String.format(s, args));
+            logger.debug(String.format(s, args));
         }
 
         /**

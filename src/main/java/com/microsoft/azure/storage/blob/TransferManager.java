@@ -28,9 +28,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousFileChannel;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.LinkedList;
 import java.util.UUID;
-
-import static java.lang.StrictMath.toIntExact;
 
 /**
  * This class contains a collection of methods (and structures associated with those methods) which perform higher-level
@@ -101,8 +100,8 @@ public final class TransferManager {
                 the list of Ids later. Eager ensures parallelism but may require some internal buffering.
                  */
                 .concatMapEager(i -> {
-                    int count = Math.min(blockLength, (int) (file.size() - i * blockLength));
-                    Flowable<ByteBuffer> data = FlowableUtil.readFile(file, i * blockLength, count);
+                    long count = Math.min((long) blockLength, file.size() - i * blockLength);
+                    Flowable<ByteBuffer> data = FlowableUtil.readFile(file, (long)i * (long)blockLength, count);
 
                     // TODO: progress
 
@@ -127,7 +126,7 @@ public final class TransferManager {
                     stageBlock is finished. Prefetch is a hint that each of the Observables emitted by the source
                     will emit only one value, which is true here because we have converted from a Single.
                      */
-                }, optionsReal.parallelism(), 1)
+                }, optionsReal.parallelism(), Flowable.bufferSize())
                 /*
                 collectInto will gather each of the emitted blockIds into a list. Because we used concatMap, the Ids
                 will be emitted according to their block number, which means the list generated here will be
@@ -149,7 +148,7 @@ public final class TransferManager {
 
     private static int calculateNumBlocks(long dataSize, long blockLength) {
         // Can successfully cast to an int because MaxBlockSize is an int, which this expression must be less than.
-        int numBlocks = toIntExact(dataSize / blockLength);
+        int numBlocks = StrictMath.toIntExact(dataSize / blockLength);
         // Include an extra block for trailing data.
         if (dataSize % blockLength != 0) {
             numBlocks++;
